@@ -11,6 +11,12 @@
   "dependencies": {
     "next": "13.5.1",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "sass": "^1.67.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.6.2",
+    "@types/react": "^18.2.22",
+    "typescript": "^5.2.2"
   }
 }
