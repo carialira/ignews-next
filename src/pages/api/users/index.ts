@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next"
 import { use } from "react"
 
+
+
 export default (request:NextApiRequest, reponse:NextApiResponse) => {
   const users = [
     {id:1, name:'Ari'},
@@ -9,5 +11,5 @@ export default (request:NextApiRequest, reponse:NextApiResponse) => {
     {id:4, name:'Be'},
   ]
 
-  return Response.json(users)
+  return reponse.json(users)
 }
