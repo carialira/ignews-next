@@ -23,7 +23,7 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse){
       q.Get(q.Match(q.Index("user_by_email"), q.Casefold(session.user.email)))
     );
     let customerId = user.data.stripe_customer_id;
-  
+  console.log(customerId,'customerId')
 
     if (!customerId) {
       const stripeCustomer = await stripe.customers.create({
@@ -39,6 +39,7 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse){
           },
         })
       );
+      
       
       customerId = stripeCustomer.id;
     }
