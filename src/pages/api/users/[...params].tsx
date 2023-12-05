@@ -3,7 +3,6 @@ import { use } from "react";
 
 export default (request: NextApiRequest, reponse: NextApiResponse) => {
   const query = request.query.params;
-  console.log(query[0], "t");
 
   let users = [
     { id: 1, name: "Ari" },

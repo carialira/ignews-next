@@ -13,24 +13,23 @@ type UserType = {
   };
 };
 
-export default async function handle(req: NextApiRequest, res: NextApiResponse){
-  console.log("enerti", req);
+export default async function handle(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method === "POST") {
     const session = await getSession({ req });
-    console.log(session, "session 👩");
 
     const user = await fauna.query<UserType>(
       q.Get(q.Match(q.Index("user_by_email"), q.Casefold(session.user.email)))
     );
     let customerId = user.data.stripe_customer_id;
-  console.log(customerId,'customerId')
 
     if (!customerId) {
       const stripeCustomer = await stripe.customers.create({
         email: session.user.email,
         // metadata
       });
-      console.log(stripeCustomer, "stripeCustomer");
 
       await fauna.query(
         q.Update(q.Ref(q.Collection("users"), user.ref.id), {
@@ -39,11 +38,23 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse){
           },
         })
       );
-      
-      
+
       customerId = stripeCustomer.id;
     }
 
+    const existingCustomer = await stripe.customers.retrieve(customerId);
+
+    if (!existingCustomer) {
+      const newCustomerData = {
+        id: customerId,
+        email: session.user.email,
+      };
+      const newCustomer = await stripe.customers.create(newCustomerData);
+    } else {
+      const restoredCustomer = await stripe.customers.update(customerId, {
+        email: session.user.email,
+      });
+    }
     const stripeCheckoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
@@ -59,9 +70,10 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse){
       success_url: process.env.STRIPE_SUCCESS_URL,
       cancel_url: process.env.STRIPE_CANCEL_URL,
     });
+  
     return res.status(200).json({ sessionId: stripeCheckoutSession.id });
   } else {
     res.setHeader("Allow", "POST");
     res.status(405).end("Method not allowed");
   }
-};
+}
