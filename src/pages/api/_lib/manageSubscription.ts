@@ -28,7 +28,7 @@ export async function saveSubscription(subscriptionId: string, customerId: strin
       q.Exists(q.Match(q.Index(indexName), customerId))
     );
 
-    let userRef;
+    let userRef: any;
 
     if (documentExists) {
       userRef = await fauna.query(
@@ -46,7 +46,7 @@ export async function saveSubscription(subscriptionId: string, customerId: strin
         },
       };
 
-      const createdUser = await fauna.query(
+      const createdUser: any = await fauna.query(
         q.Create(q.Collection("users"), newUser)
       );
 
