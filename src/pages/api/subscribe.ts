@@ -1,5 +1,5 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import { getSession } from "next-auth/react";
+import { NextApiRequest, NextApiResponse } from "next";
 import { stripe } from "../../service/stripe";
 import { fauna } from "../../service/fauna";
 import { query as q } from "faunadb";

@@ -1,15 +1,18 @@
 import { fauna } from "../../../service/fauna";
-import { stripe } from "../../..//service/stripe";
+import { stripe } from "../../../service/stripe";
 import { query as q } from "faunadb";
 
-export async function saveSubscription(subscriptionId: string, customerId: string) {
+export async function saveSubscription(
+  subscriptionId: string,
+  customerId: string,
+  createAction = false
+) {
   try {
     // Nome do índice
     const indexName = "user_by_stripe_customer_id";
 
     // Verificar se o índice já existe
     const indexExists = await fauna.query(q.Exists(q.Index(indexName)));
-
     // Criar o índice se ele não existir
     if (!indexExists) {
       await fauna.query(
@@ -19,8 +22,6 @@ export async function saveSubscription(subscriptionId: string, customerId: strin
           terms: [{ field: ["data", "stripe_customer_id"] }],
         })
       );
-
-      console.log(`Index ${indexName} created successfully.`);
     }
 
     // Verificar se o documento existe antes de acessá-lo
@@ -32,10 +33,7 @@ export async function saveSubscription(subscriptionId: string, customerId: strin
 
     if (documentExists) {
       userRef = await fauna.query(
-        q.Select(
-          "ref",
-          q.Get(q.Match(q.Index(indexName), customerId))
-        )
+        q.Select("ref", q.Get(q.Match(q.Index(indexName), customerId)))
       );
     } else {
       // Documento não existe, então criamos
@@ -51,10 +49,7 @@ export async function saveSubscription(subscriptionId: string, customerId: strin
       );
 
       userRef = createdUser.ref;
-
-      console.log(`User with ID ${customerId} created successfully.`);
     }
-
     // Obter informações da assinatura no Stripe
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
@@ -70,21 +65,49 @@ export async function saveSubscription(subscriptionId: string, customerId: strin
     const collectionName = "subscriptions";
 
     // Verificar se a coleção já existe
-    const collectionExists = await fauna.query(q.Exists(q.Collection(collectionName)));
+    const collectionExists = await fauna.query(
+      q.Exists(q.Collection(collectionName))
+    );
 
     // Criar a coleção se ela não existir
     if (!collectionExists) {
       await fauna.query(q.CreateCollection({ name: collectionName }));
-      console.log(`Collection ${collectionName} created successfully.`);
     }
 
-    // Adicionar a assinatura à coleção
-    await fauna.query(
-      q.Create(q.Collection(collectionName), { data: subscriptionData })
-    );
+        // Nome do índice
+        const indexSubscriptions = "subscription_by_id";
 
-    console.log(`Subscription ${subscriptionData.id} saved successfully.`);
-
+        // Verificar se o índice já existe
+        const indexSubscriptionsExists = await fauna.query(q.Exists(q.Index(indexSubscriptions)));
+        // Criar o índice se ele não existir
+        if (!indexExists) {
+          await fauna.query(
+            q.CreateIndex({
+              name: indexSubscriptionsExists,
+              source: q.Collection("subscriptions"),
+              terms: [{ field: ["data", "subscription_by_id"] }],
+            })
+          );
+        }
+        
+    if (createAction) {
+      // Adicionar a assinatura à coleção
+      await fauna.query(
+        q.Create(q.Collection(collectionName), { data: subscriptionData })
+      );
+    } else {
+   
+       // atualiza a assinatura da coleção
+      await fauna.query(
+        q.Replace(
+          q.Select(
+            "ref",
+            q.Get(q.Match(q.Index("subscription_by_id"), subscriptionId))
+          ),
+          { data: subscriptionData }
+        )
+      );
+    }
   } catch (error) {
     console.error(error, "Error saving subscription");
   }
