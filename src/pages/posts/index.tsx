@@ -1,12 +1,24 @@
 import Head from "next/head";
-import * as prismic from '@prismicio/client';
+import { GetStaticProps } from "next";
+import * as Prismic from "@prismicio/client";
+import { RichText } from "prismic-dom";
 
 import Styles from "./styles.module.scss";
-import { GetStaticProps } from "next";
 
 import { getPrismicClient } from "../../service/prismic";
 
-export default function Posts() {
+type Posts = {
+  slug: string;
+  title: String;
+  excerpt: string;
+  updatedAt: string;
+};
+interface PostsProps {
+  posts: Array<Posts>;
+}
+
+export default function Posts({ posts }: PostsProps) {
+  console.log(posts,'posts')
   return (
     <>
       <Head>
@@ -14,34 +26,52 @@ export default function Posts() {
       </Head>
       <main className={Styles.container}>
         <div className={Styles.posts}>
-          <a href="#">
-            <time>04-01-2023 15:00</time>
-            <strong>One Year ago: 2022 health news</strong>
-            <p>Many great things happen in medicine in 2022. Here are some of the events. Holograms train medical students. Holograms are...</p>
-          </a>
-          <a href="#">
-            <time>03-01-2024 07:00</time>
-            <strong>Russia celebrity party</strong>
-            <p>There is a big party in Russia. Famous people...</p>
-          </a>
+          {posts && posts.length>0 && posts.map((post) => {
+            return (
+                <a href="#" key={post.slug}>
+                  <time>{post.updatedAt}</time>
+                  <strong>{post.title}</strong>
+                  <p>{post.excerpt}</p>
+                </a>
+            );
+          })}
         </div>
       </main>
     </>
   );
 }
 
-export const getStaticProps: GetStaticProps = async ()=>{
+export const getStaticProps: GetStaticProps = async () => {
   const cliente = getPrismicClient();
-  const document = await cliente.get({
-    predicates: prismic.predicate.at('document.type', 'publication'),
-    fetch: ['publication.title', 'publication.content'],
-    pageSize:100,
-  })
+  const response = await cliente.get({
+    predicates: Prismic.predicate.at("document.type", "publication"),
+    fetch: ["publication.title", "publication.content"],
+    pageSize: 100,
+  });
 
-  console.log(JSON.stringify(document, null, 2))
+  console.log(JSON.stringify(response, null, 2));
 
-  return{
-    props: {}
-  }
+  const posts = response.results.map((post:any) => {
+    const resumeText: any = post.data.content.find(
+      (content: any) => content.type === "paragraph"
+    );
+// console.log( RichText.asText(post.data.title),' 👩‍💻👩‍💻👩‍💻👩‍💻👩‍💻👩‍💻')
+    return {
+      slug: post.uid,
+      title: post.data.title,
+      excerpt: resumeText ? resumeText.text : "",
+      updatedAt: new Date(post.last_publication_date).toLocaleDateString(
+        "pt-BR",
+        {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        }
+      ),
+    };
+  });
 
+  return {
+    props: {posts},
+  };
 };

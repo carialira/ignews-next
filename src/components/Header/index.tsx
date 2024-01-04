@@ -1,21 +1,26 @@
 
-import { SignInButton } from '../SingInButton'
-import Styles from './styles.module.scss'
+import  {ActiveLink}  from "../ActiveLink";
+import { SignInButton } from "../SingInButton";
+import Styles from "./styles.module.scss";
 
 
 
-export function Header(){
+export function Header() {
 
-  return(
+  
+  return (
     <header className={Styles.headerContainer}>
       <div className={Styles.headerContent}>
-        <img src="/images/logo.svg" alt="logo"/>
+        <img src="/images/logo.svg" alt="logo" />
         <nav>
-          <a className={Styles.active} href="/">Home</a>
-          <a href="/posts">Posts</a>
+          <ActiveLink activeClassName={Styles.active} href="/">
+            Home
+          </ActiveLink>
+          <ActiveLink activeClassName={Styles.active} href="/posts">Posts </ActiveLink>
         </nav>
-        <SignInButton/>
+
+        <SignInButton />
       </div>
     </header>
-  )
+  );
 }
