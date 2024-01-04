@@ -80,7 +80,7 @@ export async function saveSubscription(
         // Verificar se o índice já existe
         const indexSubscriptionsExists = await fauna.query(q.Exists(q.Index(indexSubscriptions)));
         // Criar o índice se ele não existir
-        if (!indexExists) {
+        if (!indexSubscriptionsExists) {
           await fauna.query(
             q.CreateIndex({
               name: indexSubscriptionsExists,
@@ -90,14 +90,14 @@ export async function saveSubscription(
           );
         }
         
-    if (createAction) {
-      // Adicionar a assinatura à coleção
-      await fauna.query(
-        q.Create(q.Collection(collectionName), { data: subscriptionData })
-      );
-    } else {
-   
-       // atualiza a assinatura da coleção
+
+        // Verificar se a assinatura já existe antes de acessá-la
+    const subscriptionExists = await fauna.query(
+      q.Exists(q.Match(q.Index("subscription_by_id"), subscriptionId))
+    );
+
+    if (subscriptionExists) {
+      // A assinatura existe, então podemos substituir
       await fauna.query(
         q.Replace(
           q.Select(
@@ -107,7 +107,29 @@ export async function saveSubscription(
           { data: subscriptionData }
         )
       );
+    } else {
+      // A assinatura não existe, então podemos criar
+      if (createAction) {
+        // Adicionar a assinatura à coleção
+        await fauna.query(
+          q.Create(q.Collection(collectionName), { data: subscriptionData })
+        );
+      } else { 
+      // atualiza a assinatura da coleção
+        await fauna.query(
+          q.Replace(
+            q.Select(
+              "ref",
+              q.Get(q.Match(q.Index("subscription_by_id"), subscriptionId))
+            ),
+            { data: subscriptionData }
+          )
+        );
+      }
     }
+   
+
+   
   } catch (error) {
     console.error(error, "Error saving subscription");
   }
