@@ -1,4 +1,3 @@
-import { throws } from "assert";
 import { stripe } from "../../service/stripe";
 import { NextApiRequest, NextApiResponse } from "next";
 import { Readable } from "stream";
@@ -66,6 +65,7 @@ export default async function handle(
             break;
 
           case "checkout.session.completed":
+            console.log("checkout.session.completed")
             const checkoutSession = event.data
               .object as Stripe.Checkout.Session;
 

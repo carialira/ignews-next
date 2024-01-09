@@ -6,6 +6,7 @@ import { RichText } from "prismic-dom";
 import Styles from "./styles.module.scss";
 
 import { getPrismicClient } from "../../service/prismic";
+import Link from "next/link";
 
 type Posts = {
   slug: string;
@@ -18,7 +19,6 @@ interface PostsProps {
 }
 
 export default function Posts({ posts }: PostsProps) {
-  console.log(posts,'posts')
   return (
     <>
       <Head>
@@ -28,11 +28,11 @@ export default function Posts({ posts }: PostsProps) {
         <div className={Styles.posts}>
           {posts && posts.length>0 && posts.map((post) => {
             return (
-                <a href="#" key={post.slug}>
+              <Link href={`/posts/${post.slug}`} key={post.slug}>
                   <time>{post.updatedAt}</time>
                   <strong>{post.title}</strong>
                   <p>{post.excerpt}</p>
-                </a>
+                  </Link>
             );
           })}
         </div>
@@ -49,13 +49,12 @@ export const getStaticProps: GetStaticProps = async () => {
     pageSize: 100,
   });
 
-  console.log(JSON.stringify(response, null, 2));
+  // console.log(JSON.stringify(response, null, 2));
 
   const posts = response.results.map((post:any) => {
     const resumeText: any = post.data.content.find(
       (content: any) => content.type === "paragraph"
     );
-// console.log( RichText.asText(post.data.title),' 👩‍💻👩‍💻👩‍💻👩‍💻👩‍💻👩‍💻')
     return {
       slug: post.uid,
       title: post.data.title,

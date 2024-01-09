@@ -89,12 +89,13 @@ export async function saveSubscription(
             })
           );
         }
-        
+               
 
         // Verificar se a assinatura já existe antes de acessá-la
     const subscriptionExists = await fauna.query(
       q.Exists(q.Match(q.Index("subscription_by_id"), subscriptionId))
     );
+
 
     if (subscriptionExists) {
       // A assinatura existe, então podemos substituir
@@ -109,6 +110,7 @@ export async function saveSubscription(
       );
     } else {
       // A assinatura não existe, então podemos criar
+
       if (createAction) {
         // Adicionar a assinatura à coleção
         await fauna.query(
@@ -128,6 +130,7 @@ export async function saveSubscription(
       }
     }
    
+    
 
    
   } catch (error) {

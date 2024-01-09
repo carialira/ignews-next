@@ -22,7 +22,7 @@ export default function Home({product}: HomeProps) {
         <section className={Styles.hero}>
           <span>👋 Hey, welcome!</span>
           <h1>
-            News about he <span>React</span> word.
+            News for you <span>Learn</span> English.
           </h1>
           <p>
             Get access to all the publications <br />

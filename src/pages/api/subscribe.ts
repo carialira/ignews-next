@@ -41,7 +41,6 @@ export default async function handle(
 
       customerId = stripeCustomer.id;
     }
-
     const existingCustomer = await stripe.customers.retrieve(customerId);
 
     if (!existingCustomer) {
